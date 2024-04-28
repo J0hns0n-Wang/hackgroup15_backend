@@ -62,16 +62,73 @@ def create_blog(user_id):
     post_body = json.loads(request.data)
     title = post_body.get("title", "")
     content = post_body.get("content", "")
-    date = 3
+    date = post_body.get("date", datetime.datetime.now())
     
     user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     
-    post = Post(title=title, content=content, user_id=user_id)
+    post = Post(title=title, content=content, user_id=user_id, date = date)
     db.session.add(post)
     db.session.commit()
     return success_response(post.serialize(), 201)
+
+
+@app.route("/api/blog/<int:post_id>/", methods=["GET"])
+def get_blog(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        return failure_response("Post not found!")
+    return success_response(post.serialize())
+
+@app.route("/api/blog/<int:post_id>/", methods=["DELETE"])
+def delete_blog(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        return failure_response("Post not found!")
+    
+    db.session.delete(post)
+    db.session.commit()
+    return success_response(post.serialize())
+
+@app.route("/api/blog/comment/<int:post_id>/", methods=["POST"])
+def create_comment(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        return failure_response("Post not found!")
+    
+    post_body = json.loads(request.data)
+    content = post_body.get("content", "")
+    user_id = post_body.get("user_id", "")
+    
+    comment = Comment(content=content, user_id=user_id, post_id=post_id)
+    db.session.add(comment)
+    db.session.commit()
+    return success_response(comment.serialize(), 201)
+
+@app.route("/api/blog/<int:post_id>/", methods=["GET"])
+def get_comment(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        return failure_response("Post not found!")
+    return success_response([c.serialize() for c in post.comments])
+
+@app.route("/api/blog/<int:post_id>/", methods=["DELETE"])
+def delete_comment(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        return failure_response("Post not found!")
+    
+    post_body = json.loads(request.data)
+    comment_id = post_body.get("comment_id", "")
+    comment = Comment.query.filter_by(id=comment_id).first()
+    if comment is None:
+        return failure_response("Comment not found!")
+    
+    db.session.delete(comment)
+    db.session.commit()
+    return success_response(comment.serialize())
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)

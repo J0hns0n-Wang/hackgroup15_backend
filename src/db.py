@@ -32,13 +32,13 @@ class Post(db.Model):
     content = db.Column(db.String, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     comments = db.relationship("Comment", cascade="delete")
-    # date = db.Column(db.Integer, nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, **kwargs):
         self.title = kwargs.get("title", "")
         self.content = kwargs.get("content", "")
         self.user_id = kwargs.get("user_id", 0)
-        # self.date = kwargs.get("date", 0)
+        self.date = kwargs.get("date")
 
     def serialize(self):
         return {
@@ -46,7 +46,7 @@ class Post(db.Model):
             "title": self.title,
             "content": self.content,
             "user_id": self.user_id,
-            # "date": self.date,
+            "date": str(self.date),
             "comments": [c.serialize() for c in self.comments]
         }
         
