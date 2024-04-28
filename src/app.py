@@ -32,6 +32,9 @@ def hello_world():
 
 @app.route("/api/users/", methods=["POST"])
 def create_user():
+    """
+    Endpoint to create a user
+    """
     post_body = json.loads(request.data)
     username = post_body.get("username", "")
     password = post_body.get("password", "")
@@ -50,15 +53,44 @@ def create_user():
     db.session.commit()
     return success_response(user.serialize(), 201)
 
+
+# user login
+@app.route("/api/auth/", methods=["POST"])
+def auth_user():
+    """
+    Endpoint to authenticate a user
+    """
+    post_body = json.loads(request.data)
+    username = post_body.get("username", "")
+    password = post_body.get("password", "")
+    
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        return failure_response("User not found!")
+    
+    if bcrypt.checkpw(password.encode('utf-8'), user.password):
+        return success_response(user.serialize())
+    return failure_response("Incorrect password!")
+
+
 @app.route("/api/users/<int:user_id>/", methods=["GET"])
 def get_user(user_id):
+    """
+    Endpoint to get a user
+    """
     user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     return success_response(user.serialize())
 
+
+####### Blog Routes #######
+
 @app.route("/api/blog/<int:user_id>/", methods=["POST"])
 def create_blog(user_id):
+    """
+    Endpoint to create a blog
+    """
     post_body = json.loads(request.data)
     title = post_body.get("title", "")
     content = post_body.get("content", "")
@@ -76,6 +108,9 @@ def create_blog(user_id):
 
 @app.route("/api/blog/<int:post_id>/", methods=["GET"])
 def get_blog(post_id):
+    """
+    Endpoint to get a blog
+    """
     post = Post.query.filter_by(id=post_id).first()
     if post is None:
         return failure_response("Post not found!")
@@ -83,6 +118,9 @@ def get_blog(post_id):
 
 @app.route("/api/blog/<int:post_id>/", methods=["DELETE"])
 def delete_blog(post_id):
+    """
+    Endpoint to delete a blog
+    """
     post = Post.query.filter_by(id=post_id).first()
     if post is None:
         return failure_response("Post not found!")
@@ -91,8 +129,14 @@ def delete_blog(post_id):
     db.session.commit()
     return success_response(post.serialize())
 
+
+###### Comment Routes #######
+
 @app.route("/api/blog/comment/<int:post_id>/", methods=["POST"])
 def create_comment(post_id):
+    """
+    Endpoint to create a comment
+    """
     post = Post.query.filter_by(id=post_id).first()
     if post is None:
         return failure_response("Post not found!")
@@ -108,6 +152,9 @@ def create_comment(post_id):
 
 @app.route("/api/blog/<int:post_id>/", methods=["GET"])
 def get_comment(post_id):
+    """
+    Endpoint to get comments
+    """
     post = Post.query.filter_by(id=post_id).first()
     if post is None:
         return failure_response("Post not found!")
@@ -115,6 +162,9 @@ def get_comment(post_id):
 
 @app.route("/api/blog/<int:post_id>/", methods=["DELETE"])
 def delete_comment(post_id):
+    """
+    Endpoint to delete a comment
+    """
     post = Post.query.filter_by(id=post_id).first()
     if post is None:
         return failure_response("Post not found!")
